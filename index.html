@@ -151,7 +151,7 @@ let unsubscribe = null;
 function defaultMonthData() {
   const d = {};
   GROUPS.forEach(g => g.filieres.forEach(f => {
-    d[f] = {leads:0,dc:0,admis:0,rdvProg:0,rdvEff:0,ni:0};
+    d[f] = {leads:0,dc:0,admis:0,rdvEff:0,ni:0};
   }));
   return d;
 }
