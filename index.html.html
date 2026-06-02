@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Admissions · YNOV Toulouse</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f8f6;color:#1a1a1a;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.title h1{font-size:20px;font-weight:600;color:#1a1a1a}
+.title p{font-size:13px;color:#888;margin-top:2px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select{font-size:13px;padding:7px 12px;border-radius:8px;border:0.5px solid #ddd;background:#fff;color:#1a1a1a;cursor:pointer}
+.btn{font-size:13px;padding:7px 14px;border-radius:8px;border:0.5px solid #ddd;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.btn:hover{background:#f0f0ee}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{opacity:.85}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.kpi{background:#fff;border-radius:8px;padding:12px 14px;border:0.5px solid #e8e8e4}
+.kpi-lbl{font-size:11px;color:#888;margin-bottom:4px}
+.kpi-val{font-size:24px;font-weight:600;color:#1a1a1a;line-height:1.1}
+.kpi-sub{font-size:11px;color:#aaa;margin-top:3px}
+.table-wrap{overflow-x:auto;border:0.5px solid #e8e8e4;border-radius:12px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+thead tr{background:#f8f8f6}
+th{padding:10px 12px;text-align:left;font-weight:500;color:#888;font-size:11px;border-bottom:0.5px solid #e8e8e4;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
+th.c,td.c{text-align:center}
+td{padding:9px 12px;color:#1a1a1a;border-bottom:0.5px solid #f0f0ee;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafaf8}
+.group-header td{background:#f4f4f1;font-weight:600;font-size:11px;color:#666;padding:7px 12px;text-transform:uppercase;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e4}
+.filiere-name{font-weight:500;font-size:13px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bg{background:#EAF3DE;color:#27500A}
+.ba{background:#FAEEDA;color:#633806}
+.br{background:#FCEBEB;color:#791F1F}
+.total-row td{font-weight:600;background:#f4f4f1}
+.editable{cursor:pointer;border-radius:4px;padding:2px 6px;display:inline-block;min-width:30px;text-align:center;transition:background .1s}
+.editable:hover{background:#e6f1fb}
+.editable input{width:55px;font-size:13px;border:1px solid #aaa;border-radius:4px;padding:2px 4px;text-align:center;background:#fff;color:#1a1a1a}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#fff;border:0.5px solid #e8e8e4;border-radius:8px;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#639922;display:inline-block;margin-right:5px}
+.sync-dot.saving{background:#BA7517}
+.sync-dot.error{background:#E24B4A}
+.status-txt{font-size:12px;color:#888;display:flex;align-items:center}
+.mode-pill{font-size:11px;padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.pill-lock{background:#FCEBEB;color:#791F1F}
+.pill-edit{background:#EAF3DE;color:#27500A}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="title">
+      <h1>Suivi Admissions</h1>
+      <p>YNOV Campus Toulouse · <span id="view-label">—</span></p>
+    </div>
+    <div class="controls">
+      <select id="month-sel" onchange="onMonthChange()"></select>
+      <span class="mode-pill pill-lock" id="mode-pill">🔒 Lecture</span>
+      <button class="btn" id="edit-btn" onclick="toggleEdit()">✏️ Modifier</button>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-txt"><span class="sync-dot" id="sync-dot"></span><span id="sync-text">Connexion...</span></div>
+    <div style="font-size:11px;color:#bbb">Source : Salesforce · YNOV Toulouse</div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:170px">Filière</th>
+          <th class="c">Leads</th>
+          <th class="c">DC</th>
+          <th class="c">Admis</th>
+          <th class="c">RDV prog.</th>
+          <th class="c">RDV eff.</th>
+          <th class="c">NI</th>
+          <th class="c">Taux admis</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ➡️ REMPLACE apiKey par ta vraie clé Firebase (Project Settings > Your apps)
+const firebaseConfig = {
+  apiKey: "AIzaSyAcB1O-kZ3N-vP_lpV1jRxT3nHzz6T4obQ",
+  authDomain: "ynov-admissions.firebaseapp.com",
+  projectId: "ynov-admissions",
+  storageBucket: "ynov-admissions.firebasestorage.app",
+  messagingSenderId: "928642934582",
+  appId: "1:928642934582:web:8a08c62ce9fe4d7ccb3597"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const COLS = ['leads','dc','admis','rdvProg','rdvEff','ni'];
+const GROUPS = [
+  {name:'Sarah — Pôle Tech', filieres:[
+    'B1 Info / Data / Cyber',
+    'BTS SIO',
+    'B3 Info / Infra Réseaux / Syst. emb.',
+    'M1 Dev FT / Syst. emb. / Dev mobile IOT'
+  ]},
+  {name:'Cécile — Pôle Créa / Mgmt', filieres:[
+    'B1 Chef de produit',
+    'B2 Mkg Com',
+    'B3 Digital IA',
+    'B3 IA',
+    'B3 BIM',
+    'M1 Créa',
+    'M1 Archi',
+    'M1 Expert IA Data'
+  ]}
+];
+
+let currentMonth = new Date().getMonth();
+let editMode = false;
+let tableData = {};
+let unsubscribe = null;
+
+function defaultMonthData() {
+  const d = {};
+  GROUPS.forEach(g => g.filieres.forEach(f => {
+    d[f] = {leads:0,dc:0,admis:0,rdvProg:0,rdvEff:0,ni:0};
+  }));
+  return d;
+}
+
+function pct(a,b){ return b>0 ? Math.round(a/b*100)+'%' : '—'; }
+
+function badge(val){
+  if(val==='—') return '<span style="color:#bbb">—</span>';
+  const n = parseInt(val);
+  const cls = n>=60?'bg':n>=35?'ba':'br';
+  return `<span class="badge ${cls}">${val}</span>`;
+}
+
+function totals(m){
+  const t={leads:0,dc:0,admis:0,rdvProg:0,rdvEff:0,ni:0};
+  const md=tableData[m]||{};
+  GROUPS.forEach(g=>g.filieres.forEach(f=>{
+    const d=md[f]||{};
+    COLS.forEach(c=>{t[c]+=(d[c]||0);});
+  }));
+  return t;
+}
+
+function setSyncState(state){
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-text');
+  if(state==='live'){dot.className='sync-dot';txt.textContent='Synchronisé en direct';}
+  else if(state==='saving'){dot.className='sync-dot saving';txt.textContent='Sauvegarde...';}
+  else if(state==='error'){dot.className='sync-dot error';txt.textContent='Erreur de connexion';}
+}
+
+function subscribeMonth(){
+  if(unsubscribe) unsubscribe();
+  const ref=doc(db,'admissions',`month_${currentMonth}`);
+  unsubscribe=onSnapshot(ref, snap=>{
+    tableData[currentMonth]=snap.exists()?snap.data():defaultMonthData();
+    setSyncState('live');
+    render();
+  }, ()=>setSyncState('error'));
+}
+
+function renderMonthSel(){
+  const sel=document.getElementById('month-sel');
+  sel.innerHTML=MONTHS.map((m,i)=>`<option value="${i}" ${i===currentMonth?'selected':''}>${m}</option>`).join('');
+}
+
+function onMonthChange(){
+  currentMonth=parseInt(document.getElementById('month-sel').value);
+  document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2025';
+  if(editMode){editMode=false;updateEditUI();}
+  tableData[currentMonth]=defaultMonthData();
+  render();
+  subscribeMonth();
+}
+window.onMonthChange=onMonthChange;
+
+function renderKPIs(){
+  const t=totals(currentMonth);
+  const items=[
+    {l:'Leads',v:t.leads,s:''},
+    {l:'Dossiers (DC)',v:t.dc,s:pct(t.dc,t.leads)+' des leads'},
+    {l:'Admis',v:t.admis,s:pct(t.admis,t.dc)+' des DC'},
+    {l:'RDV prog.',v:t.rdvProg,s:''},
+    {l:'RDV eff.',v:t.rdvEff,s:'Show rate '+pct(t.rdvEff,t.rdvProg)},
+    {l:'Inscrits (NI)',v:t.ni,s:'Conv. '+pct(t.ni,t.leads)},
+  ];
+  document.getElementById('kpis').innerHTML=items.map(x=>
+    `<div class="kpi"><div class="kpi-lbl">${x.l}</div><div class="kpi-val">${x.v}</div><div class="kpi-sub">${x.s}</div></div>`
+  ).join('');
+}
+
+function renderTable(){
+  const tbody=document.getElementById('tbody');
+  const md=tableData[currentMonth]||{};
+  let html='';
+  GROUPS.forEach(g=>{
+    html+=`<tr class="group-header"><td colspan="8">${g.name}</td></tr>`;
+    g.filieres.forEach(f=>{
+      const d=md[f]||{leads:0,dc:0,admis:0,rdvProg:0,rdvEff:0,ni:0};
+      html+=`<tr>
+        <td class="filiere-name">${f}</td>
+        ${COLS.map(c=>`<td class="c">${editMode
+          ?`<span class="editable" data-f="${encodeURIComponent(f)}" data-c="${c}">${d[c]}</span>`
+          :d[c]
+        }</td>`).join('')}
+        <td class="c">${badge(pct(d.admis,d.dc))}</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+  if(editMode){
+    tbody.querySelectorAll('.editable').forEach(span=>{
+      span.addEventListener('click',function(){startEdit(this);});
+    });
+  }
+  const t=totals(currentMonth);
+  document.getElementById('tfoot').innerHTML=`<tr class="total-row">
+    <td>Total</td>
+    ${COLS.map(c=>`<td class="c">${t[c]}</td>`).join('')}
+    <td class="c">${badge(pct(t.admis,t.dc))}</td>
+  </tr>`;
+}
+
+function startEdit(span){
+  const f=decodeURIComponent(span.dataset.f);
+  const col=span.dataset.c;
+  const cur=((tableData[currentMonth]||{})[f]||{})[col]||0;
+  const input=document.createElement('input');
+  input.type='number';input.min=0;input.value=cur;
+  input.onblur=()=>saveCell(f,col,input.value);
+  input.onkeydown=e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape')renderTable();};
+  span.innerHTML='';span.appendChild(input);input.focus();input.select();
+}
+
+async function saveCell(filiere,col,rawVal){
+  const val=Math.max(0,parseInt(rawVal)||0);
+  if(!tableData[currentMonth]) tableData[currentMonth]=defaultMonthData();
+  if(!tableData[currentMonth][filiere]) tableData[currentMonth][filiere]={leads:0,dc:0,admis:0,rdvProg:0,rdvEff:0,ni:0};
+  tableData[currentMonth][filiere][col]=val;
+  setSyncState('saving');
+  try{
+    await setDoc(doc(db,'admissions',`month_${currentMonth}`),tableData[currentMonth]);
+    setSyncState('live');
+  }catch(e){
+    setSyncState('error');
+    showToast('Erreur sauvegarde : '+e.message);
+  }
+  renderKPIs();
+  renderTable();
+}
+
+function updateEditUI(){
+  const pill=document.getElementById('mode-pill');
+  const btn=document.getElementById('edit-btn');
+  if(editMode){
+    pill.className='mode-pill pill-edit';pill.textContent='✏️ Édition active';
+    btn.textContent='✓ Terminer';
+  }else{
+    pill.className='mode-pill pill-lock';pill.textContent='🔒 Lecture';
+    btn.textContent='✏️ Modifier';
+  }
+  renderTable();
+}
+
+function toggleEdit(){editMode=!editMode;updateEditUI();}
+window.toggleEdit=toggleEdit;
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity='1';
+  setTimeout(()=>{t.style.opacity='0';},2500);
+}
+
+function render(){renderKPIs();renderTable();}
+
+// Init
+renderMonthSel();
+document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2025';
+tableData[currentMonth]=defaultMonthData();
+render();
+subscribeMonth();
+</script>
+</body>
+</html>
