@@ -115,13 +115,13 @@ const db = getFirestore(app);
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const COLS = ['leads','dc','admis','rdvProg','rdvEff','ni'];
 const GROUPS = [
-  {name:'Sarah — Pôle Tech', filieres:[
+  {name:'Sarah', filieres:[
     'B1 Info / Data / Cyber',
     'BTS SIO',
     'B3 Info / Infra Réseaux / Syst. emb.',
     'M1 Dev FT / Syst. emb. / Dev mobile IOT'
   ]},
-  {name:'Cécile — Pôle Créa / Mgmt', filieres:[
+  {name:'Cécile', filieres:[
     'B1 Chef de produit',
     'B2 Mkg Com',
     'B3 Digital IA',
@@ -131,6 +131,8 @@ const GROUPS = [
     'M1 Archi',
     'M1 Expert IA Data'
   ]}
+  {name:'Cécile', filieres:[
+    'A définir',
 ];
 
 let currentMonth = new Date().getMonth();
@@ -190,7 +192,7 @@ function renderMonthSel(){
 
 function onMonthChange(){
   currentMonth=parseInt(document.getElementById('month-sel').value);
-  document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2025';
+  document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2026';
   if(editMode){editMode=false;updateEditUI();}
   tableData[currentMonth]=defaultMonthData();
   render();
@@ -299,7 +301,7 @@ function render(){renderKPIs();renderTable();}
 
 // Init
 renderMonthSel();
-document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2025';
+document.getElementById('view-label').textContent=MONTHS[currentMonth]+' 2026';
 tableData[currentMonth]=defaultMonthData();
 render();
 subscribeMonth();
