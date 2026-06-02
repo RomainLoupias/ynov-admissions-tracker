@@ -211,7 +211,7 @@ window.onMonthChange=onMonthChange;
 function renderKPIs(){
   const t=totals(currentMonth);
   const items=[
-    {l:'Leads',v:t.leads,s:''},
+    {l:'Leads M-1+M',v:t.leads,s:''},
     {l:'Dossiers (DC)',v:t.dc,s:pct(t.dc,t.leads)+' des leads'},
     {l:'Admis',v:t.admis,s:pct(t.admis,t.dc)+' des DC'},
     {l:'RDV eff.',v:t.rdvEff,s:'Show rate '+pct(t.rdvEff,t.rdvProg)},
